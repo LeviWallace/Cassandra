@@ -1,0 +1,130 @@
+@startuml
+
+package presentation {
+    class Main {
+        +{static}main(String[] args): void
+    }
+}
+
+package domain {
+    class Linter {
+        -checks: List<Check>
+        +runAllChecks(program: List<SourceClass>): List<Issue>
+    }
+
+    package check {
+        interface Check {
+            +{abstract}check(program: List<SourceClass>): List<Issue>
+        }
+
+        Check <|.. ClassChecker
+        abstract class ClassChecker {
+            +{final}check(program: List<SourceClass>): List<Issue>
+            #{abstract} checkClass(object: SourceClass): List<Issue>
+        }
+
+        Check <|.. MethodChecker
+        abstract class MethodChecker {
+            +{final}check(program: List<SourceClass>): List<Issue>
+            #{abstract} checkMethod(object: SourceMethod): List<Issue>
+        }
+
+        Check <|.. FieldChecker
+        abstract class FieldChecker {
+            +{final}check(program: List<SourceClass>): List<Issue>
+            #{abstract} checkField(object: SourceField): List<Issue>
+        }
+    }
+
+    class Issue {
+        -message: String
+        -source: SourceObject
+        +Issue(message: String, source: SourceObject)
+        +getMessage(): Source)
+        +getSource(): SourceObject
+    }
+
+    class FileReference
+    {
+        -fileName: String
+        -lineNumber: int
+        +FileReference(fileName: String, lineNumber: int)
+        +toString(): String
+    }
+
+    package source {
+        interface SourceObject {
+            +{abstract}getFileReference(): FileReference
+            +{abstract}getName(): String
+            +{abstract}getAccess(): AccessModifier
+        }        
+
+        SourceObject <|.. SourceClass
+        interface SourceClass {
+            +getFields(): List<SourceField>
+            +getMethods(): List<SourceMethod>
+            +getName(): String
+            +getAccess(): AccessModifier
+        }
+        SourceClass ..> SourceField
+        SourceClass ..> SourceMethod
+
+        SourceObject <|.. SourceField
+        interface SourceField {
+            +getName(): String
+            +getAccess(): AccessModifier
+        }
+
+        SourceObject <|.. SourceMethod
+        interface SourceMethod {
+            +getName(): String
+            +getAccess(): AccessModifier
+            +isAbstract(): boolean
+        }
+
+        package asm {
+            SourceClass <|.. ASMSourceClass
+            class ASMSourceClass {
+
+            }
+
+            SourceField <|.. ASMSourceField
+            class ASMSourceField {
+
+            }
+
+            SourceMethod <|.. ASMSourceMethod
+            class ASMSourceMethod {
+
+            }
+        }
+
+        enum AccessModifier {
+            PUBLIC
+            PRIVATE
+            PROTECTED
+            PACKAGE_PRIVATE
+        }
+    }
+
+    Check ..> SourceClass
+    Check ..> Issue
+    ClassChecker ..> SourceClass
+    MethodChecker ..> SourceMethod
+    FieldChecker ..> SourceField
+    Check <|.. Linter
+    Linter -->"*" Check
+}
+
+package data {
+    class FileList {
+        -files: List<String>
+        +FileList()
+        +addDirectory(String)
+        +openFiles(): List<InputStream>
+    }
+}
+
+Main ..> Linter
+
+@enduml

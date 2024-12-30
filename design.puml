@@ -1,0 +1,519 @@
+
+@startuml 
+!pragma useNewPackage
+
+package src
+{
+    package java {
+    package main
+        {
+            package datasource
+            {
+                interface ClassFileLoader
+                {
+                    ~getAllClassFiles(): Iterable<InputStreamSupplier>
+
+                }
+
+                ClassFileLoaderDirectory .up.|> ClassFileLoader
+                class ClassFileLoaderDirectory
+                {
+                    -{final}path: Path
+                    +ClassFileLoaderDirectory(path: Path)
+                    +getAllClasFiles(): List<InputStreamSupplier>
+                }
+
+                interface InputStreamSupplier
+                {
+                    ~get(): InputStream
+                }
+
+            }
+
+            package domain
+            {
+                package check
+                {
+                    interface Check
+                    {
+                        ~check(program: SourceProgram): List<Issue>
+                    }
+
+                    MethodChecker .up.|> Check
+                    abstract class MethodChecker
+                    {
+                        #{abstract}checkMethod(object: SourceMethod): List<Issue>
+                        +check(program: SourceProgram): List<Issue>
+                    }
+                    
+                    FieldChecker .up.|> Check
+                    abstract class FieldChecker
+                    {
+                        #{abstract}checkField(object: SourceField): List<Issue>
+                        +check(program: SourceProgram): List<Issue>
+                    }
+
+                    ClassChecker .up.|> Check
+                    abstract ClassChecker
+                    {
+                        #{abstract}checkClass(object: SourceClass): List<Issue>
+                        +check(program: SourceProgram): List<Issue>
+                    }
+
+                    CheckClassNaming -up-|> ClassChecker
+                    class CheckClassNaming 
+                    {
+                        ~{static}{final}MESSAGE: String
+                        #checkClass(object: SourceClass): List<Issue>
+                    }
+
+                    CheckEqualsHashCodeExist -up-|> ClassChecker
+                    class CheckEqualsHashCodeExist 
+                    {
+                        ~{static}{final}MESSAGE: String
+                        #checkClass(object: SourceClass): List<Issue>
+                    }
+
+                    CheckHollywoodPrinciple -up-|> ClassChecker
+                    class CheckClassNaming 
+                    {
+                        ~{static}{final}MESSAGE: String
+                        #checkClass(object: SourceClass): List<Issue>
+                    }
+
+                    CheckInformationHiding -up-|> FieldChecker
+                    class CheckInformationHiding 
+                    {
+                        ~{static}{final}MESSAGE: String
+                        #checkField(object: SourceField): List<Issue>
+                    }
+
+                    CheckMethodNaming .up.|> MethodChecker
+                    class CheckMethodNaming 
+                    {
+                        ~{static}{final}MESSAGE: String
+                        #checkMethod(object: SourceMethod): List<Issue>
+                    }
+
+                    CheckSingleton -up-|> ClassChecker
+                    class CheckSingleton
+                    {
+                        ~{static}{final}MESSAGE: String
+                        #checkClass(object: SourceClass): List<Issue>
+                    }
+
+                    CheckStrategy -up-|> ClassChecker
+                    class CheckStrategy 
+                    {
+                        ~{static}{final}MESSAGE: String
+                        #checkClass(object: SourceClass): List<Issue>
+                    }
+
+                    CheckTemplate -up-|> MethodChecker
+                    class CheckTemplate
+                    {
+                        ~{static}{final}MESSAGE: String
+                        #checkMethod(object: SourceMethod): List<Issue>
+                    }
+
+                    CheckUnneededInheritance -up-|> ClassChecker
+                    class CheckUnneededInheritance
+                    {
+                        ~{static}{final}MESSAGE: String
+                        #checkClass(object: SourceClass): List<Issue>
+                    }
+
+                    CheckUnusedVariables -up-|> MethodChecker
+                    class CheckUnusedVariables
+                    {
+                        ~{static}{final}MESSAGE: String
+                        #checkMethod(object: SourceMethod): List<Issue>
+                    }
+
+                   
+                    
+                }
+
+                package source
+                {
+                    package asm {
+
+                        class ASMAccessParser
+                        {
+                            +{static}getAccessModifier(access: int): AccessModifier
+                        }
+
+                        class ASMSourceClass
+                        {
+                            -{final}fileReference: FileReference
+                            -{final}fields: List<ASMSourceField>
+                            -{final}methods: List<ASMSourceMethod>
+                            -{final}methodsMap: Map<String, ASMSourceMethod>
+                            -{final}name: String
+                            -{final}access: AccessModifier
+                            -{final}superName: String
+                            -superClass: SourceClass
+                            -{final}subClasses: List<SourceClass> 
+                            -{final}isAbstract: boolean
+                            -{final}isInterface: boolean
+                            +ASMSourceClass(classNode: ClassNode)
+                            +link(program: ASMSourceProgram): void
+                            ~getMethodMap(methodMapKey: String): ASMSourceMethod
+                            +getFields(): List<SourceField>
+                            +getMethods(): List<SourceField>
+                            +isAbstract(): boolean
+                            +isInterface(): boolean
+                            +getFileReference(): FileReference
+                            +getName(): String
+                            +getAccess(): AccessModifier
+                            +getSuperClass(): SourceClass
+                            +getSubClasses(): Iterable<SourceClass>
+                        }
+                        
+
+
+                        class ASMSourceField
+                        {
+                            -{final}associatedClass: ASMSourceClass
+                            -{final}fileReference: FileReference
+                            -{final}access: AccessModifier
+                            -{final}name: String
+                            -{final}isStatic: boolean
+                            -{final}isFinal: boolean
+                            -{final}asmType: Type
+                            -type: SourceClass
+                            +ASMSourceField(associatedClass: ASMSourceClass, fieldNode: FieldNode, fileReference: FileReference)
+                            ~link(program: ASMSourceProgram): void
+                            +getAssociatedClass(): ASMSourceClass
+                            +getFileReference(): FileReference
+                            +getName(): String
+                            +getAccess(): AccessModifier
+                            +isStatic(): boolean
+                            +isFinal(): boolean
+                            +getType(): SourceClass
+                        }
+                        
+
+
+                        class ASMSourceLocalVariable
+                        {
+                            -{final}name: String
+                            -{final}fileReference: FileReference
+                            +ASMSourceLocalVariable(node: LocalVariableNode, fileReference: FileReference, instructions: InsnList)
+                            +getFileReference(): FileReference
+                            +getName(): String
+                            +getAccess(): AccessModifier
+                            +isUser(): boolean
+                        }
+
+
+                        class ASMSourceMethod
+                        {
+                            -{final}associatedClass: ASMSourceClass
+                            -{final}fileReference: FileReference
+                            -{final}name: String
+                            -{final}methodMapKey: String
+                            -{final}access: AccessModifier
+                            -{final}isAbstract: boolean
+                            -{final}isStatic: boolean
+                            -{final}isFinal: boolean
+                            -{final}methodCalls: List<MethodInsnNode>
+                            -{final}localVariables: List<ASMSOurceLocalVaraible>
+                            -calledMethods: List<ASMSourceMethod>
+                            -{final}asmReturnType: Type
+                            -returnType: SourceClass
+                            +ASMSourceMethod(associatedClass: ASMSourceClass, methodNode: MethodNode, fileReference: FileReference)
+                            -findLineNumber(method: MethodNode): int
+                            -formatMethodMapKey(name: String, desc: String): String
+                            -getMethodMapKey(): String
+                            -findMethodClass(methodNode: MethodNode): List<MethodInsnNode>
+                            -link(program: ASMSourceProgram): void
+                            +getAssociatedClass(): ASMSourceClass
+                            +getFileReference(): FileReference
+                            +getLocalVaraibles(): List<SourceLocalVariable>
+                            +getReturnType(): SourceClass
+                            +getName(): String
+                            +isStatic(): boolean
+                            +isFinal(): boolean
+                            +isAbstract(): boolean
+                            +getAccess(): AccessModifier
+                        }
+
+                        class ASMSourceProgram
+                        {
+                            -{final}classMap: Map<String, ASMSourceClass>
+                            -{final}classes: List<SourceClass>
+                            +ASMSourceProgram(loader: ClassFileLoader)
+                            +getClasses(): Iterable<SourceClass>
+                            ~getClass(name: String): ASMSourceClass
+                        }
+                        
+                    }
+
+                    
+                    ASMAccessParser --> AccessModifier
+
+                    ASMSourceClass .up.|> SourceClass
+                    ASMSourceClass -->"*" ASMSourceField
+                    ASMSourceClass -->"*"ASMSourceMethod
+                    ASMSourceClass ..>"*"ASMSourceMethod
+                    ASMSourceClass --> AccessModifier
+                    ASMSourceClass ..> AccessModifier
+                    ASMSourceClass ..> SourceClass
+                    ASMSourceClass ..>"*" SourceClass
+                    
+                    ASMSourceField .up.|> SourceField
+                    ASMSourceField --> ASMSourceClass
+                    ASMSourceField --> FileReference
+                    ASMSourceField --> AccessModifier
+                    ASMSourceField --> SourceClass
+                    ASMSourceField ..> ASMSourceClass
+                    ASMSourceField ..> FileReference
+                    ASMSourceField ..> AccessModifier
+                    ASMSourceField ..> SourceClass
+
+                    ASMSourceLocalVariable .up.|> SourceLocalVariable
+                    ASMSourceLocalVariable --> FileReference
+                    ASMSourceLocalVariable ..> FileReference
+                    ASMSourceLocalVariable ..> AccessModifier
+
+                    ASMSourceMethod .up.|> SourceMethod
+                    ASMSourceMethod --> ASMSourceClass
+                    ASMSourceMethod --> FileReference
+                    ASMSourceMethod --> AccessModifier
+                    ASMSourceMethod -->"*" ASMSourceMethod
+                    ASMSourceMethod --> SourceClass
+                    ASMSourceMethod ..> ASMSourceClass
+                    ASMSourceMethod ..> FileReference
+                    ASMSourceMethod ..>"*" SourceLocalVariable
+                    ASMSourceMethod ..> SourceClass
+                    ASMSourceMethod ..> AccessModifier
+
+                    ASMSourceProgram .up.|> SourceProgram
+                    ASMSourceProgram -->"*" SourceClass
+                    ASMSourceProgram --> ASMSourceClass
+                    ASMSourceProgram ..> ASMSourceClass
+                    ASMSourceProgram ..>"*" SourceClass
+
+                    enum AccessModifier
+
+                    class FileReference
+                    {
+                        -{final}filename: String
+                        -{final}lineNumber: int
+                        +FileReference(filename: String)
+                        +getFilename(): String
+                        +hasLineNumber(): boolean
+                        +getLineNumber(): int
+                        +toString(): String
+                    }
+
+                    interface SourceObject 
+                    {
+                        ~getFileRefernce(): FileReference
+                        ~getName(): String
+                        ~getAccess(): AccessModifier
+                    }
+                    SourceObject ..> FileReference
+                    SourceObject ..> AccessModifier
+
+                    
+                    SourceClass ..|> SourceObject
+                    interface SourceClass
+                    {
+                        ~getFields(): List<SourceField>
+                        ~getMethods(): List<SourceMethod>
+                        ~isAbstract(): boolean
+                        ~isInterface(): boolean
+                        ~getSuperClass(): SourceClass
+                        ~getSubClasses(): Iterable<SourceClass>
+                    }
+                    SourceClass ..>"*" SourceField
+                    SourceClass ..>"*" SourceMethod
+                    SourceClass ..> SourceClass
+                    SourceClass ..>"*" SourceClass
+                    
+                    SourceField ..|> SourceObject
+                    interface SourceField
+                    {
+                        ~getAssociateClass(): SourceClass
+                        ~getType(): SourceClass
+                        ~isStatic(): boolean
+                        ~isFinal(): boolean
+                    }
+                    SourceField ..> SourceClass
+
+                    SourceLocalVariable ..|> SourceObject
+                    interface SourceLocalVariable
+                    {
+                        ~isUsed(): boolean
+                    }
+
+                    SourceMethod ..|> SourceObject
+                    interface SourceMethod
+                    {
+                        ~getReturnType(): SourceClass
+                        ~getLocalVariables(): List<SourceLocalVariable>
+                        ~isAbstract(): boolean
+                        ~isStatic(): boolean
+                        ~isFinal(): boolean
+                        ~getAssocciatedClass(): SourceClass
+                        ~getCalledMethods(): List<SourceMethod>
+                    }
+
+                    SourceMethod ..> SourceClass
+                    SourceMethod ..>"*" SourceMethod
+                    SourceMethod ..>"*" SourceLocalVariable
+                    
+                    interface SourceProgram
+                    {
+                        getClasses(): Iterable<SourceClass>
+                    }
+                    SourceProgram ..>"*" SourceClass
+                }
+
+                enum Checks
+
+                class Issue {
+                    -{final}description: String
+                    -{final}source: SourceObject
+                    +Issue(description: String, source: SourceObject)
+                    +getDescription(): String
+                    +getSource(): SourceObject
+                    +toString(): String
+                }
+                Issue ..> SourceObject
+                Issue --> SourceObject
+
+                class Linter {
+                    -{final}checks: List<Checks>
+                    +Linter()
+                    +runAll(program: SourceProgram): List<Issue>
+                    +addCheck(check: Check): void
+                    +toString(): String
+                }
+                Linter ..>"*" Issue
+                Linter ..>"*" Checks
+
+                class NamingPolicyVerifier
+                {
+                    +{static}isLowerCamelCase(identifier: String): boolean
+                    +{static}isUpperCamelCase(identifier: String): boolean
+                    -{static}isLowerCamelCase(identifier: String, isUpper: boolean): boolean
+                    -{static}isInternal(identifier: String): boolean
+                }
+            }
+
+            package presentation
+            {
+                class IssueFormatter
+                {
+                    -{final}sb: StringBuilder
+                    -{final}issue: Issue
+                    +IssueFormatter(issue: Issue)
+                    -format(): void
+                    +toString(): String
+                }
+
+                class Main
+                {
+                    -{static}filePath: Path
+                    -{static}checkCases: ArrayList<String>
+                    +{static}main(String[] args): void
+                    -{static}handleArguments(String[] args): void
+                    -{static}displayUses(): void
+                    -{static}handleFilePath(path: Path): SourceProgram
+                    -addChecks(linter: Linter): void
+                    -{static}listChecks(isErr: boolean): void
+                    -{static}validateChecks(): void
+                    -runApp(program: SourceProgram): void
+                }
+            }
+        }
+    }
+    Main ..> SourceProgram
+    Main ..> Linter
+    Main ..> SourceProgram
+    
+}
+
+
+package tests
+{
+    package java
+    {
+
+        package domain
+        {
+            abstract class LinterTest
+            {
+                +{final}run(): void
+                #{abstract} getPath(): Path
+                #{abstract} getChecks(): List<Check>
+                #{abstract} getIssues(): List<TestIssue>
+            }
+            LinterTest -right->"*" TestIssue
+
+            class TestIssue
+            {
+                -{final}description: String
+                -{final}sourceName: String
+                -{final}fileName: String
+                -{final}lineNumber: int
+            }
+
+            class HashEqualsTest
+            {
+                #getPath(): Path
+                #getChecks(): List<Check>
+                #getIssues(): List<TestIssue>
+            }
+            HashEqualsTest -up-|> LinterTest
+
+            class HollywoodPrincipleTest
+            {
+                #getPath(): Path
+                #getChecks(): List<Check>
+                #getIssues(): List<TestIssue>
+            }
+            HollywoodPrincipleTest -up-|> LinterTest
+
+            class NamingTest
+            {
+                #getPath(): Path
+                #getChecks(): List<Check>
+                #getIssues(): List<TestIssue>
+            }
+            NamingTest -up-|> LinterTest
+
+            class StrategyTest
+            {
+                #getPath(): Path
+                #getChecks(): List<Check>
+                #getIssues(): List<TestIssue>
+            }
+            StrategyTest -up-|> LinterTest
+
+            class TemplateTest
+            {
+                #getPath(): Path
+                #getChecks(): List<Check>
+                #getIssues(): List<TestIssue>
+            }
+            TemplateTest -up-|> LinterTest
+
+            class UneededInheritanceTest
+            {
+                #getPath(): Path
+                #getChecks(): List<Check>
+                #getIssues(): List<TestIssue>
+            }
+            UneededInheritanceTest -up-|> LinterTest
+        }
+
+    }
+
+}
+
+
+@enduml
