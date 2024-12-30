@@ -1,4 +1,4 @@
-# Project: Linter
+# Project: Cassandra
 
 ## Dependencies
 Specified in pom.xml
